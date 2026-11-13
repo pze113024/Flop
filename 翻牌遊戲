@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#fff5e9">
+  <meta name="description" content="自由設定總牌數與銘謝惠顧張數的離線幸運翻牌遊戲，全部翻完才結束。">
+  <title>幸運翻牌挑戰｜自訂張數抽獎遊戲</title>
+  <style>
+    :root {color-scheme:light; --ink:#47264b; --muted:#8a677b; --purple:#5a2a68; --purple-dark:#40164f; --pink:#eb4d75; --gold:#ffca59; --cream:#fff8ed; --shadow:0 16px 44px #6a315a1b;}
+    *{box-sizing:border-box}
+    html{min-height:100%}
+    body{margin:0;min-height:100vh;padding:22px 16px 42px;font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;color:var(--ink);background:radial-gradient(circle at 3% 8%,#fff2a9 0,transparent 29%),radial-gradient(circle at 95% 17%,#ffd6dd 0,transparent 27%),linear-gradient(155deg,#fff9ea,#fff0e6 65%,#ffe7ed)}
+    button,input{font:inherit}
+    button{touch-action:manipulation}
+    .wrap{max-width:1110px;margin:0 auto}
+    .hero{text-align:center;padding:18px 0 20px}
+    .eyebrow{display:inline-flex;gap:8px;align-items:center;justify-content:center;background:#ffe3e9;border:1px solid #ffd0da;color:#9b3559;border-radius:40px;font-size:13px;font-weight:900;letter-spacing:2px;padding:8px 16px}
+    h1{font-size:clamp(32px,5.5vw,61px);font-weight:1000;letter-spacing:2px;line-height:1.16;color:#5a2764;margin:13px 0 9px;text-shadow:2px 3px 0 #ffe2a4}
+    .hero-sub{font-weight:700;color:#8c6177;margin:0;font-size:clamp(14px,1.6vw,18px)}
+    .steps{display:flex;justify-content:center;align-items:center;gap:13px;margin:21px auto 5px;flex-wrap:wrap}
+    .step{display:flex;gap:8px;align-items:center;color:#b19ba6;font-weight:900;font-size:14px}
+    .step b{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;border:2px solid #d9c5cf;background:#fffdfb;color:#a88e9b}
+    .step.active,.step.done{color:#76396e}
+    .step.active b,.step.done b{background:#76396e;border-color:#76396e;color:white}
+    .step-line{height:2px;width:38px;background:#dcc0cf}
+    .panel{background:#ffffffd9;border:2px solid #fff;border-radius:29px;box-shadow:var(--shadow),0 4px 0 #ffdee5;padding:clamp(18px,3.8vw,37px)}
+    [hidden]{display:none!important}
+    .setup-heading{text-align:center;margin:3px auto 25px}
+    h2{font-size:clamp(22px,3vw,32px);letter-spacing:.02em;margin:0 0 9px;font-weight:950}
+    .desc{color:var(--muted);font-weight:700;font-size:14px;margin:0;line-height:1.75}
+    .controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;max-width:770px;margin:0 auto}
+    .field{background:linear-gradient(165deg,#fffaf6,#fff5ef);border:2px solid #f6e0da;border-radius:20px;padding:20px 18px 17px}
+    .field-title{display:flex;gap:9px;align-items:center;font-weight:950;font-size:17px;margin-bottom:5px}
+    .field-icon{font-size:24px}
+    .field-help{color:#976f7b;font-size:12px;font-weight:700;margin:0 0 16px;line-height:1.65}
+    .stepper{display:flex;gap:9px;align-items:center}
+    .square{width:44px;height:51px;flex:0 0 44px;border:2px solid #eed0d3;border-radius:13px;background:#fff;cursor:pointer;font-size:26px;font-weight:750;color:#71396c;display:grid;place-items:center}
+    .square:hover{background:#fff0f6;border-color:#e7afc0}
+    .square:disabled{opacity:.34;cursor:not-allowed}
+    .num{min-width:0;width:100%;height:56px;border-radius:12px;border:2px solid #dcb8c9;background:white;text-align:center;font-size:28px;font-weight:950;color:#58245e;outline:none;font-variant-numeric:tabular-nums}
+    .num:focus{border-color:#e64c7d;box-shadow:0 0 0 4px #fbdbe7}
+    .num::-webkit-outer-spin-button,.num::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+    .num{appearance:textfield;-moz-appearance:textfield}
+    .preview{max-width:770px;margin:18px auto 0;background:linear-gradient(120deg,#fff0cb,#fff6dd);border:1px solid #f8d99c;border-radius:19px;padding:17px 20px}
+    .preview-label{font-weight:950;font-size:14px;color:#906047;margin-bottom:10px}
+    .preview-line{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center}
+    .chip{background:#fff;border:1px solid #efd6ca;border-radius:99px;padding:8px 13px;font-size:14px;font-weight:900}
+    .chip strong{color:#df4e75;font-size:19px}
+    .preview-odds{text-align:center;color:#8e6780;font-weight:700;margin:11px 0 0;font-size:13px}
+    .error{margin:13px auto 0;max-width:770px;color:#b52643;text-align:center;font-size:14px;font-weight:850;min-height:21px}
+    .primary{border:0;border-radius:999px;background:linear-gradient(110deg,#fb6073,#db3d79);color:white;font-size:18px;font-weight:1000;padding:16px 34px;cursor:pointer;box-shadow:0 7px 0 #bb3261;transition:transform .17s;line-height:1.3}
+    .primary:hover{transform:translateY(-2px)}
+    .primary:active{transform:translateY(5px);box-shadow:0 2px 0 #bb3261}
+    .primary:disabled{filter:grayscale(.7);opacity:.55;cursor:not-allowed}
+    .actions{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;align-items:center;margin-top:20px}
+    .secondary{border:2px solid #d9b8cb;border-radius:99px;padding:12px 20px;color:#743a6b;font-weight:900;background:#fff;cursor:pointer}
+    .secondary:hover{background:#fff1f6}
+    button:focus-visible{outline:4px solid #ea6d95;outline-offset:4px}
+    .board-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+    .game-title{font-weight:1000;font-size:clamp(18px,2.4vw,26px)}
+    .round-meta{font-size:13px;color:#986d80;font-weight:900}
+    .stats{display:flex;justify-content:center;gap:9px;flex-wrap:wrap;margin-bottom:15px}
+    .stat{border-radius:13px;border:1px solid #edd4d9;background:#fff9f7;padding:9px 13px;font-weight:950;font-size:14px}
+    .stat em{font-style:normal;color:#dc486a;font-size:19px}
+    .progress-box{max-width:680px;margin:0 auto 21px}
+    .progress-text{display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;color:#8c5d75;font-weight:900}
+    .progress-track{height:10px;background:#f6e3e3;border-radius:50px;overflow:hidden}
+    .progress-fill{height:100%;width:0%;background:linear-gradient(90deg,#f9b742,#e86a88);border-radius:50px;transition:width .3s}
+    .board{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:clamp(10px,1.7vw,18px)}
+    .card{padding:0;border:0;background:transparent;position:relative;aspect-ratio:.77;min-width:0;perspective:900px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .18s}
+    .card:not(:disabled):hover{transform:translateY(-4px)}
+    .card:not(:disabled):active{transform:scale(.97)}
+    .card-inner{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .58s cubic-bezier(.2,.8,.2,1)}
+    .card.flipped .card-inner{transform:rotateY(180deg)}
+    .face{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;border-radius:15px;overflow:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+    .back{border:4px solid #f3bc63;background:linear-gradient(150deg,#98558c,#652966 65%,#4b2059);box-shadow:0 7px 0 #d28e67,0 10px 17px #5131532b}
+    .back:before{content:"";position:absolute;inset:7px;border:1.5px solid #f8c9df8c;border-radius:9px}
+    .back:after{content:"";position:absolute;width:180%;height:40%;background:#ffffff13;transform:rotate(-30deg);top:-16%;left:-22%}
+    .card-index{position:absolute;top:9px;left:10px;color:#fbe6e8bf;font-weight:900;font-size:12px}
+    .question{font-size:clamp(36px,5vw,58px);line-height:1;color:#ffdc7f;font-weight:1000;filter:drop-shadow(2px 3px 0 #4a205b)}
+    .flip-hint{font-weight:900;color:#fff0d2;font-size:12px;margin-top:10px}
+    .front{transform:rotateY(180deg);border:4px solid #f0c367;background:linear-gradient(150deg,#fff8db,#ffe197);box-shadow:0 7px 0 #e9b26c,0 10px 17px #51315320;color:#933f49}
+    .front.loss{background:linear-gradient(160deg,#f7f1f7,#e9dfea);border-color:#cbbdd4;box-shadow:0 7px 0 #b7aabd,0 10px 17px #51315320;color:#6e6279}
+    .face-emoji{font-size:clamp(28px,4vw,47px);line-height:1.1}
+    .outcome{font-weight:1000;font-size:clamp(12px,1.65vw,18px);text-align:center;margin:9px 4px 0;line-height:1.35}
+    .live{font-size:clamp(14px,2vw,19px);font-weight:900;min-height:27px;margin:23px 0 8px;text-align:center;color:#7a3b69}
+    .finish{display:none;text-align:center;margin:22px auto 0;border-radius:22px;background:linear-gradient(130deg,#fff6da,#ffeec0);border:2px solid #f0d8b0;padding:20px}
+    .finish.show{display:block;animation:pop .3s ease}
+    .finish h3{margin:0 0 8px;font-size:clamp(23px,3vw,35px)}
+    .finish p{margin:0;color:#826176;font-size:14px;font-weight:700}
+    .footer{text-align:center;color:#997889;font-size:12px;font-weight:700;line-height:1.8;margin:18px 0 0}
+    .confetti{position:fixed;z-index:30;pointer-events:none;top:-20px;left:0;width:10px;height:16px;opacity:0;animation:fall var(--duration) ease-out forwards}
+    @keyframes fall{0%{opacity:1;transform:translateY(-20px) rotate(0)}90%{opacity:1}100%{opacity:0;transform:translateY(105vh) translateX(var(--drift)) rotate(780deg)}}
+    @keyframes pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+    @media(max-width:700px){.controls{grid-template-columns:1fr}.board{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.panel{border-radius:22px}.back,.front{border-width:3px}.question{font-size:44px}.outcome{font-size:clamp(11px,3vw,16px)}.step-line{width:25px}}
+    @media(min-width:701px) and (max-width:880px){.board{grid-template-columns:repeat(5,minmax(0,1fr))}}
+    @media(max-width:380px){.board{gap:8px}.face{border-radius:12px}.question{font-size:36px}.flip-hint{font-size:10px}.card-index{font-size:10px}.field{padding:17px 13px}.step{font-size:12px}}
+    @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header class="hero">
+      <span class="eyebrow">✦ 活動抽獎小遊戲 ✦</span>
+      <h1>🎁 幸運翻牌挑戰</h1>
+      <p class="hero-sub" id="heroSubtitle">張數與獎項自由設定，打造專屬抽獎遊戲！</p>
+      <div class="steps" aria-label="遊戲步驟">
+        <span class="step active" id="step1"><b>1</b>設定卡牌</span>
+        <span class="step-line" aria-hidden="true"></span>
+        <span class="step" id="step2"><b>2</b>開始翻牌</span>
+      </div>
+    </header>
+
+    <section class="panel" id="setupScreen" aria-labelledby="setupTitle">
+      <div class="setup-heading">
+        <h2 id="setupTitle">⚙️ 第一步：設定抽獎規則</h2>
+        <p class="desc">決定這一輪有幾張牌、幾張「銘謝惠顧」。<br>剩下的牌會自動設為「恭喜中獎」。</p>
+      </div>
+      <form id="setupForm" novalidate>
+        <div class="controls">
+          <div class="field">
+            <label class="field-title" for="totalInput"><span class="field-icon">🃏</span> 卡牌總張數</label>
+            <p class="field-help">可設定 1～200 張牌</p>
+            <div class="stepper">
+              <button type="button" class="square" id="totalMinus" aria-label="總牌數減 1">−</button>
+              <input class="num" type="number" id="totalInput" name="total" value="11" min="1" max="200" step="1" inputmode="numeric" required>
+              <button type="button" class="square" id="totalPlus" aria-label="總牌數加 1">＋</button>
+            </div>
+          </div>
+          <div class="field">
+            <label class="field-title" for="lossInput"><span class="field-icon">💌</span> 銘謝惠顧張數</label>
+            <p class="field-help">可設定 0 張，最多不可超過總張數</p>
+            <div class="stepper">
+              <button type="button" class="square" id="lossMinus" aria-label="銘謝惠顧張數減 1">−</button>
+              <input class="num" type="number" id="lossInput" name="loss" value="1" min="0" max="11" step="1" inputmode="numeric" required>
+              <button type="button" class="square" id="lossPlus" aria-label="銘謝惠顧張數加 1">＋</button>
+            </div>
+          </div>
+        </div>
+        <div class="preview" aria-label="本輪牌數預覽">
+          <div class="preview-label">📋 本輪抽獎配置</div>
+          <div class="preview-line">
+            <span class="chip">🃏 總牌數 <strong id="previewTotal">11</strong></span>
+            <span class="chip">🎉 恭喜中獎 <strong id="previewWins">10</strong></span>
+            <span class="chip">💌 銘謝惠顧 <strong id="previewLosses">1</strong></span>
+          </div>
+          <p class="preview-odds" id="previewOdds">每張未翻卡牌的初始中獎機率：約 90.9%</p>
+        </div>
+        <p class="error" id="formError" role="alert" aria-live="polite"></p>
+        <div class="actions">
+          <button type="submit" class="primary" id="startButton">🎮 確認設定・開始翻牌</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel" id="gameScreen" aria-label="第二步：遊戲翻牌區" hidden>
+      <div class="board-top">
+        <div>
+          <div class="game-title">✨ 第二步：選一張牌翻開</div>
+          <div class="round-meta" id="gameMeta">本輪共 11 張牌</div>
+        </div>
+        <button type="button" class="secondary" id="editSettings">⚙️ 返回修改設定</button>
+      </div>
+      <div class="stats" aria-label="抽獎統計">
+        <span class="stat">🃏 已翻 <em id="openedCount">0 / 11</em></span>
+        <span class="stat">🎉 恭喜中獎 <em id="winCount">0</em></span>
+        <span class="stat">💌 銘謝惠顧 <em id="lossCount">0</em></span>
+      </div>
+      <div class="progress-box" aria-label="翻牌進度">
+        <div class="progress-text"><span>翻牌進度</span><span id="remainingCount">剩餘 11 張</span></div>
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      </div>
+      <div class="board" id="cardBoard" aria-label="可以翻開的卡牌"></div>
+      <p class="live" id="liveMessage" role="status" aria-live="polite">請選一張卡牌開始！</p>
+      <div class="finish" id="finishPanel" role="status" aria-live="polite">
+        <h3>🎊 本輪抽獎完成！</h3>
+        <p id="finishSummary"></p>
+        <div class="actions">
+          <button type="button" class="primary" id="replayButton">🔄 同樣設定・重新洗牌</button>
+          <button type="button" class="secondary" id="finishEdit">⚙️ 修改牌數設定</button>
+        </div>
+      </div>
+    </section>
+    <p class="footer">每張牌只能翻開一次，結果會保留在畫面上；全部翻完才結束。<br>免安裝、免網路，直接用瀏覽器開啟 HTML 即可使用。</p>
+  </main>
+  <script>
+    (() => {
+      'use strict';
+      const byId = id => document.getElementById(id);
+      const setup = byId('setupScreen');
+      const game = byId('gameScreen');
+      const totalInput = byId('totalInput');
+      const lossInput = byId('lossInput');
+      const board = byId('cardBoard');
+      const finishPanel = byId('finishPanel');
+      const LIMIT = 200;
+      let config = {total: 11, losses: 1};
+      let cards = [];
+      let openCount = 0;
+      let winCount = 0;
+      let lossCount = 0;
+      let roundId = 0;
+
+      // Use rejection sampling to avoid modulo bias for the randomized card order.
+      function randomIndex(max) {
+        if (max <= 1) return 0;
+        if (globalThis.crypto && typeof globalThis.crypto.getRandomValues === 'function') {
+          const a = new Uint32Array(1);
+          const range = 4294967296;
+          const limit = range - (range % max);
+          do { globalThis.crypto.getRandomValues(a); } while (a[0] >= limit);
+          return a[0] % max;
+        }
+        return Math.floor(Math.random() * max);
+      }
+
+      function parseIntStrict(str) {
+        if (!/^\d+$/.test(String(str).trim())) return NaN;
+        return Number(str);
+      }
+
+      function validConfig() {
+        const total = parseIntStrict(totalInput.value);
+        const losses = parseIntStrict(lossInput.value);
+        if (!Number.isSafeInteger(total) || total < 1 || total > LIMIT) {
+          return {valid:false, message:`總牌數請填寫 1～${LIMIT} 的整數。`};
+        }
+        if (!Number.isSafeInteger(losses) || losses < 0 || losses > total) {
+          return {valid:false, message:`銘謝惠顧張數請填寫 0～${total} 的整數。`};
+        }
+        return {valid:true, total, losses, wins:total-losses};
+      }
+
+      function updatePreview() {
+        const total = parseIntStrict(totalInput.value);
+        const losses = parseIntStrict(lossInput.value);
+        const valid = validConfig();
+        byId('formError').textContent = valid.valid ? '' : valid.message;
+        byId('startButton').disabled = !valid.valid;
+        byId('previewTotal').textContent = Number.isSafeInteger(total) && total >= 0 ? String(total) : '—';
+        byId('previewLosses').textContent = Number.isSafeInteger(losses) && losses >= 0 ? String(losses) : '—';
+        byId('previewWins').textContent = valid.valid ? String(valid.wins) : '—';
+        byId('previewOdds').textContent = valid.valid
+          ? `每張未翻卡牌的初始中獎機率：約 ${(valid.wins / valid.total * 100).toFixed(1)}%`
+          : '請修正牌數，才能開始遊戲。';
+        if (Number.isSafeInteger(total) && total >= 1 && total <= LIMIT) {
+          lossInput.max = String(total);
+        }
+        [['totalMinus',total > 1],['totalPlus',total < LIMIT],['lossMinus',losses > 0],['lossPlus',losses < total]].forEach(([id, enabled]) => {
+          byId(id).disabled = !enabled || !Number.isInteger(total) || !Number.isInteger(losses);
+        });
+      }
+
+      function stepInput(which, delta) {
+        const target = which === 'total' ? totalInput : lossInput;
+        const max = which === 'total' ? LIMIT : parseIntStrict(totalInput.value);
+        const min = which === 'total' ? 1 : 0;
+        const current = parseIntStrict(target.value);
+        if (!Number.isInteger(current) || !Number.isInteger(max)) return;
+        target.value = String(Math.min(max, Math.max(min, current + delta)));
+        if (which === 'total') {
+          const losses = parseIntStrict(lossInput.value);
+          if (losses > Number(totalInput.value)) lossInput.value = totalInput.value;
+        }
+        updatePreview();
+      }
+
+      byId('totalMinus').addEventListener('click',()=>stepInput('total',-1));
+      byId('totalPlus').addEventListener('click',()=>stepInput('total',1));
+      byId('lossMinus').addEventListener('click',()=>stepInput('loss',-1));
+      byId('lossPlus').addEventListener('click',()=>stepInput('loss',1));
+      totalInput.addEventListener('input',updatePreview);
+      lossInput.addEventListener('input',updatePreview);
+
+      function setScreen(isGame) {
+        setup.hidden = isGame;
+        game.hidden = !isGame;
+        byId('step1').className = isGame ? 'step done' : 'step active';
+        byId('step2').className = isGame ? 'step active' : 'step';
+        byId('heroSubtitle').textContent = isGame
+          ? '逐張翻開卡牌，直到所有卡牌揭曉！'
+          : '張數與獎項自由設定，打造專屬抽獎遊戲！';
+        window.scrollTo(0,0);
+      }
+
+      function createDeck(total, losses) {
+        const deck = Array.from({length:total},(_,i)=>i < losses ? 'loss' : 'win');
+        for(let i=deck.length-1;i>0;i--){
+          const j = randomIndex(i+1);
+          [deck[i],deck[j]]=[deck[j],deck[i]];
+        }
+        return deck;
+      }
+
+      function makeCard(index) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'card';
+        btn.setAttribute('aria-label',`翻開第 ${index+1} 張卡牌`);
+        btn.innerHTML = `<span class="card-inner"><span class="face back"><span class="card-index">${String(index+1).padStart(2,'0')}</span><span class="question">?</span><span class="flip-hint">點我翻牌</span></span><span class="face front"></span></span>`;
+        btn.addEventListener('click',()=>reveal(index,btn));
+        return btn;
+      }
+
+      function newRound() {
+        roundId++;
+        cards = createDeck(config.total, config.losses);
+        openCount = 0;
+        winCount = 0;
+        lossCount = 0;
+        board.replaceChildren();
+        const fragment = document.createDocumentFragment();
+        for(let i=0;i<config.total;i++) fragment.appendChild(makeCard(i));
+        board.appendChild(fragment);
+        byId('gameMeta').textContent = `本輪共 ${config.total} 張｜恭喜中獎 ${config.total-config.losses} 張｜銘謝惠顧 ${config.losses} 張`;
+        byId('liveMessage').textContent = '請選一張卡牌開始！';
+        finishPanel.classList.remove('show');
+        byId('finishSummary').textContent = '';
+        document.querySelectorAll('.confetti').forEach(e=>e.remove());
+        updateCounters();
+        setScreen(true);
+      }
+
+      function updateCounters() {
+        byId('openedCount').textContent = `${openCount} / ${config.total}`;
+        byId('winCount').textContent = String(winCount);
+        byId('lossCount').textContent = String(lossCount);
+        byId('remainingCount').textContent = `剩餘 ${config.total - openCount} 張`;
+        byId('progressFill').style.width = `${openCount/config.total*100}%`;
+      }
+
+      function reveal(index, btn) {
+        if (btn.disabled || openCount >= config.total) return;
+        const isWin = cards[index] === 'win';
+        btn.disabled = true;
+        const front = btn.querySelector('.front');
+        front.classList.add(isWin ? 'win' : 'loss');
+        const emoji = document.createElement('span');
+        emoji.className = 'face-emoji';
+        emoji.textContent = isWin ? '🎉' : '💌';
+        const outcome = document.createElement('span');
+        outcome.className = 'outcome';
+        outcome.textContent = isWin ? '恭喜中獎' : '銘謝惠顧';
+        front.append(emoji,outcome);
+        btn.classList.add('flipped');
+        btn.setAttribute('aria-label',`第 ${index+1} 張：${outcome.textContent}`);
+        openCount++;
+        if(isWin) winCount++; else lossCount++;
+        updateCounters();
+        if (openCount === config.total) {
+          byId('liveMessage').textContent = '🎊 全部卡牌已翻開！本輪遊戲結束。';
+          byId('finishSummary').textContent = `共抽完 ${config.total} 張：恭喜中獎 ${winCount} 張、銘謝惠顧 ${lossCount} 張。`;
+          finishPanel.classList.add('show');
+          celebrate(65);
+        } else {
+          byId('liveMessage').textContent = `${isWin ? '🎉 恭喜中獎！' : '💌 銘謝惠顧！'} 還剩 ${config.total-openCount} 張，繼續翻牌。`;
+          if (isWin && config.total <= 40) celebrate(14);
+        }
+      }
+
+      function celebrate(amount) {
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        if (document.querySelectorAll('.confetti').length > 105) return;
+        const colors=['#f5bc51','#ec5483','#9860c3','#67c0a1','#ff8b5b'];
+        for(let i=0;i<amount;i++){
+          const piece=document.createElement('span');
+          piece.className='confetti';
+          piece.style.left=`${Math.random()*100}%`;
+          piece.style.background=colors[i%colors.length];
+          piece.style.borderRadius=i%4===0?'50%':'2px';
+          piece.style.setProperty('--duration',`${2.2+Math.random()*1.8}s`);
+          piece.style.setProperty('--drift',`${Math.random()*180-90}px`);
+          piece.style.animationDelay=`${Math.random()*.5}s`;
+          document.body.appendChild(piece);
+          piece.addEventListener('animationend',()=>piece.remove(),{once:true});
+        }
+      }
+
+      function backToSettings() {
+        if (openCount > 0 && openCount < config.total && !window.confirm('本輪還沒翻完，返回設定會中止目前抽獎。確定返回嗎？')) return;
+        roundId++;
+        document.querySelectorAll('.confetti').forEach(e=>e.remove());
+        setScreen(false);
+        updatePreview();
+      }
+
+      byId('setupForm').addEventListener('submit',e=>{
+        e.preventDefault();
+        const v=validConfig();
+        updatePreview();
+        if (!v.valid) return;
+        config={total:v.total,losses:v.losses};
+        newRound();
+      });
+      byId('editSettings').addEventListener('click',backToSettings);
+      byId('finishEdit').addEventListener('click',backToSettings);
+      byId('replayButton').addEventListener('click',newRound);
+      updatePreview();
+    })();
+  </script>
+</body>
+</html>
